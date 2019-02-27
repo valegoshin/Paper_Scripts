@@ -60,7 +60,7 @@ df1 <- df %>%
          age_group = fct_relevel(age_group, "25-30"), 
          BMI_group = fct_relevel(BMI_group, "18.5-25"),
          Education = fct_relevel(Education, "Technical School"))
-    
+
 # таблица данных после удаления выбросов
 df1 <- df1 %>% 
   mutate_if(is.numeric, Outl_NA) %>% 
