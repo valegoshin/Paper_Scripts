@@ -1,14 +1,13 @@
-# Script Word doc generation
-# https://davidgohel.github.io/officer/articles/word.html
-# https://davidgohel.github.io/officer/articles/offcran/tables.html
+# Script Word doc generation -----
+# https://davidgohel.github.io/officer/articles/word.html -----
+# https://davidgohel.github.io/officer/articles/offcran/tables.html -----
 
-# таблицы и графики, создаваемые в p1_script.R будут собираться в docx-файл
+# таблицы и графики, создаваемые в p1_script.R будут собираться в docx-файл -----
 
 
 library(tidyverse)
 library(broom)
 library(car)
-library(GGally)
 library(DescTools)
 library(ggthemes)
 library(flextable)
@@ -70,9 +69,9 @@ df1 <- df1 %>%
   mutate_if(is.numeric, Outl_NA) %>% 
   na.omit()
 
-# 
-glimpse(df1)
 
+###############
+# числовые переменные в изучаемом наборе данных -----
 t1 <- df1 %>% 
   select_if(is.numeric) %>% 
   skimr::skim_to_wide() %>% 
@@ -81,7 +80,6 @@ t1 <- df1 %>%
   
 
 colt1 <- names(t1)
-# fontname <- "Arial Narrow"
 t1 <- t1 %>% 
   regulartable() %>% 
   width(j = colt1, width = c(1, rep(.6, 7), 1.2)) %>%  
@@ -89,12 +87,7 @@ t1 <- t1 %>%
         pr_p = fp_par(text.align = "center"), part = "all") %>% 
   bold(part = "header") %>% theme_box() %>% height_all(0)
   
-#  align(align = "center", part = "all") %>% 
-#  font(fontname = fontname) %>% 
-#  fontsize(size = 9) %>% theme_box() %>% height_all(0)
-  
-  
-#
+
 t2 <- df1 %>% 
   select_if(is.factor) %>% 
   skimr::skim_to_wide() %>% 
@@ -109,12 +102,7 @@ t2 <- t2 %>%
         pr_p = fp_par(text.align = "center"), part = "all") %>% 
   bold(part = "header") %>% theme_box() %>% height_all(0) 
 
-# gpl <- df1 %>% 
-#  select_if(is.numeric) %>% 
-#  GGally::ggpairs()
-
-
-## fit1
+## fit1 -----
 fit1 <- lm(BIrthweight ~ Birthlength + Gestational_age + Marital_status + 
              Education + BMI_group + age_group + Smoking + Infant_sex +
              Vitamins_before_pregnancy * Vitamis_during_pregnancy +
@@ -126,7 +114,7 @@ Vitamins_before_pregnancy * Vitamis_during_pregnancy +
 Folic_acid_before_pregnancy * Folic_acid_during_pregnancy, df1)"
 
 
-# variance influence factor
+# variance influence factor -----
 rnames <- row.names(car::vif(fit1))
 vif_fit1 <- car::vif(fit1) %>% as.data.frame() %>% select(1) %>% 
   mutate(variable = rnames, 
@@ -137,6 +125,9 @@ vif_fit1 <- car::vif(fit1) %>% as.data.frame() %>% select(1) %>%
   bold(part = "header") %>% theme_box() %>% height_all(0) %>% 
   autofit()
 
+
+# Оценка созданной модели fit1 -----
+# broom::glance() result  -----
 
 glance_fit1 <- fit1 %>% 
   glance() 
@@ -151,7 +142,8 @@ glance_fit1 <- glance_fit1 %>%
   bold(part = "header") %>% theme_box() %>% height_all(0)
 
 # colformat_num(col_keys = col_glance_fit, digits = c(3,3,1,1,3,0,1,1,1,0,0)) %>%
-  
+
+# broom::tidy() result -----
 tidy_fit1 <- fit1 %>% 
   tidy(conf.int = TRUE) %>% 
   mutate(term = str_replace_all(term, "_", " "),
@@ -165,7 +157,8 @@ tidy_fit1 <- tidy_fit1 %>%
   style(pr_t = fp_text(font.size = 9, font.family = "Arial Narrow"),
         pr_p = fp_par(text.align = "center"), part = "all") %>% 
   bold(part = "header") %>% theme_box() %>% height_all(0) 
-  
+
+# plot w/ results of tidy -----
 gg1 <- fit1 %>% 
   tidy(conf.int = TRUE) %>% 
   filter(!str_detect(term, "Intercept")) %>% 
@@ -177,7 +170,44 @@ gg1 <- fit1 %>%
   geom_errorbar(width = .6) +
   coord_flip() 
 
-              
+# broom::augment() result -----
+augment_fit1 <- fit1 %>% 
+  augment() %>% 
+  select(-c(1, 3:14)) %>% 
+  head() 
+
+augment_fit1 <- augment_fit1 %>% 
+  regulartable() %>% 
+  style(pr_t = fp_text(font.size = 9, font.family = "Arial Narrow"),
+        pr_p = fp_par(text.align = "center"), part = "all") %>% 
+  bold(part = "header") %>% theme_box() %>% height_all(0)
+
+
+#########
+# fit2 -----
+
+fit2 <- lm(formula = BIrthweight ~ Birthlength + Gestational_age, data = df1)
+fit2_text <- "lm(formula = BIrthweight ~ Birthlength + Gestational_age, data = df1)"
+
+glance_fit2 <- fit2 %>% 
+  glance() %>%  
+  regulartable() %>% 
+  width(j = col_glance_fit, width = c(.7, .8, rep(.55, 3), .3, rep(.7, 5))) %>% 
+  style(pr_t = fp_text(font.size = 9, font.family = "Arial Narrow"),
+        pr_p = fp_par(text.align = "center"), part = "all") %>% 
+  bold(part = "header") %>% theme_box() %>% height_all(0)
+  
+tidy_fit2 <- fit2 %>% 
+  tidy(conf.int = TRUE) %>% 
+  mutate(term = str_replace_all(term, "_", " "),
+         zero_in_ci = ifelse(conf.low < 0 & conf.high > 0, "yes", "no")) %>% 
+  regulartable() %>% 
+  width(j = col_tidy_fit, width = c(1.8, rep(.7, 7))) %>% 
+  style(pr_t = fp_text(font.size = 9, font.family = "Arial Narrow"),
+        pr_p = fp_par(text.align = "center"), part = "all") %>% 
+  bold(part = "header") %>% theme_box() %>% height_all(0)             
+
+
 # docs <- read_docx()
 # styles_info(docs)
 
@@ -199,12 +229,25 @@ docs <- read_docx()  %>%
   body_add_par(value = " ") %>%
   body_add_par("Таб.4 tidy(fit1)", style = "table title") %>% 
   body_add_flextable(tidy_fit1) %>% 
-  body_add_par(value = " ") %>%
-  body_add_par("Таб.5 vif(fit1)", style = "table title") %>% 
-  body_add_flextable(vif_fit1, align = "left") %>% 
   body_add_par(value = " ") %>% 
   body_add_par("Рис.1 Коэффициенты модели fit1", style = "graphic title") %>%  
-  body_add_gg(value = gg1, width = 6, height = 5)
+  body_add_gg(value = gg1, width = 6, height = 5) %>% 
+  body_add_par(value = " ") %>%
+  body_add_par("Таб.5 augment(fit1)", style = "table title") %>% 
+  body_add_flextable(augment_fit1) %>% 
+  body_add_par(value = " ") %>%
+  body_add_par("Таб.6 vif(fit1)", style = "table title") %>% 
+  body_add_flextable(vif_fit1, align = "left") %>% 
+  body_add_par(value = " ") %>% 
+  body_add_par("Модель fit2", style = "heading 2") %>% 
+  body_add_par(value = " ") %>% 
+  body_add_par(value = fit2_text) %>% 
+  body_add_par(value = " ") %>% 
+  body_add_par("Таб.7 glance(fit2)", style = "table title") %>%
+  body_add_flextable(glance_fit2) %>% 
+  body_add_par(value = " ") %>%
+  body_add_par("Таб.8 tidy(fit2)", style = "table title") %>% 
+  body_add_flextable(tidy_fit2)
 
 
 print(docs, target = "docs.docx")
