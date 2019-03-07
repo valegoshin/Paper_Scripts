@@ -139,8 +139,7 @@ fit2 %>%
 # Cook's distance plot
 fit2 %>% 
   augment() %>% 
-  mutate(n_row = row_number()) %>% 
-  ggplot(aes(n_row, .cooksd)) + 
+  ggplot(aes(seq_along(.cooksd), .cooksd)) + 
   geom_col() + 
   geom_hline(yintercept = 4 * mean(cooks.distance(fit2)), 
              color = "red", linetype = "dotted") +
@@ -148,7 +147,7 @@ fit2 %>%
               mutate(n_row = row_number()) %>% 
               arrange(desc(.cooksd)) %>% 
               slice(1:12), 
-            aes(x = n_row, y = .cooksd, label = n_row), size = 2) +
+              aes(x = n_row, y = .cooksd, label = n_row), size = 2) +
   ggtitle("Модель fit2: Cook's distance") +
   theme_minimal()
 
@@ -252,3 +251,4 @@ dependent <- "BIrthweight"
 df1 %>% 
   finalfit(dependent, explanatory) %>% 
   knitr::kable()
+
