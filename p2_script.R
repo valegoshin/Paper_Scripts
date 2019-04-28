@@ -8,7 +8,7 @@ library(broom)
 library(pROC)
 library(caret)
 
-# Data 
+# Data
 
 raw_data <- read_csv("risk_factors_cervical_cancer.csv")
 raw_data <- janitor::clean_names(raw_data)
@@ -40,7 +40,7 @@ cervical %>%
   knitr::kable(caption = "Таб.5 Категориальные переменные")
 
 # исходная модель
-fit <- glm(biopsy ~ ., data = cervical, family = "binomial")
+fit <- glm(biopsy ~ ., data = cervical, family = binomial)
 
 fit %>%
   glance() %>%
@@ -65,10 +65,10 @@ fit %>%
 # подбор более подходящей модели
 MASS::stepAIC(fit, direction = "both")
 
-# измененная модель 
+# измененная модель
 fit1 <- glm(
   formula = biopsy ~ hormonal_contraceptives_years + st_ds,
-  family = "binomial", data = cervical
+  family = binomial, data = cervical
 )
 
 fit1 %>%
@@ -110,6 +110,7 @@ conf_matr %>% knitr::kable()
 confusionMatrix(conf_matr)$overall[[1]]
 precision(conf_matr)
 recall(conf_matr)
+specificity(conf_matr)
 F_meas(conf_matr)
 
 # Валидация модели
@@ -139,7 +140,10 @@ roc.test(roc_train_data, roc_test_data)
 # One more thing. Применение функций пакета finalfit
 
 library(finalfit)
-explanatory <- c("st_ds", "hormonal_contraceptives_years",  "smokes", "age", "number_of_sexual_partners", "first_sexual_intercourse", "num_of_pregnancies", "iud")
+explanatory <- c(
+  "age", "hormonal_contraceptives_years", "iud",
+  "num_of_pregnancies", "smokes", "st_ds"
+)
 dependent <- "biopsy"
 
 cervical %>%
